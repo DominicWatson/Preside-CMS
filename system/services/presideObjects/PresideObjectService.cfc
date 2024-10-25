@@ -3124,7 +3124,7 @@ component displayName="Preside Object Service" {
 
 		if ( arguments.specificVersion ) {
 			versionFilter = "#arguments.objectName#._version_number = :#arguments.objectName#._version_number";
-			params.append( { name="#arguments.objectName#___version_number", value=arguments.specificVersion, type="cf_sql_int" } );
+			params.append( { name="#arguments.objectName#___version_number", value=arguments.specificVersion, type="cf_sql_bigint" } );
 
 			if ( !arguments.allowDraftVersions && objectUsesDrafts( arguments.objectName ) ) {
 				versionFilter &= " and ( #arguments.objectName#._version_is_draft is null or #arguments.objectName#._version_is_draft = :#arguments.objectName#._version_is_draft )";
