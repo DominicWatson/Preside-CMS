@@ -97,6 +97,10 @@ component {
 			}
 		}
 
+		if ( StructKeyExists( config, "link" ) && !Len( Trim( config.link ?: "" ) ) && StructKeyExists( config, "subMenuItems" ) && IsArray( config.subMenuItems ) && !ArrayLen( config.subMenuItems ) ) {
+			return {};
+		}
+
 		return config;
 	}
 
