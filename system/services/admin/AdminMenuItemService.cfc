@@ -89,16 +89,14 @@ component {
 
 		runItemHandlerAction( arguments.itemId, "prepare", config );
 
-		if ( IsArray( config.subMenuItems ?: "" ) && ArrayLen( config.subMenuItems ) ) {
-			_trimSeparators( config.subMenuItems );
+		if ( IsArray( config.subMenuItems ?: "" ) ) {
+			if ( ArrayLen( config.subMenuItems ) ) {
+				_trimSeparators( config.subMenuItems );
+			}
 
-			if ( !ArrayLen( config.subMenuItems ) ) {
+			if ( !Len( Trim( config.link ?: "" ) ) && !ArrayLen( config.subMenuItems ) ) {
 				return {};
 			}
-		}
-
-		if ( StructKeyExists( config, "link" ) && !Len( Trim( config.link ?: "" ) ) && StructKeyExists( config, "subMenuItems" ) && IsArray( config.subMenuItems ) && !ArrayLen( config.subMenuItems ) ) {
-			return {};
 		}
 
 		return config;
