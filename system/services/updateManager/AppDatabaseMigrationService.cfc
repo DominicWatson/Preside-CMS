@@ -52,7 +52,7 @@ component {
 		if ( arguments.async ) {
 			var migrationsWithPriority = {};
 
-			for ( migration in migrations ) {
+			for ( var migration in migrations ) {
 				var asyncPriorityHandler   = "dbmigrations.#migration#.asyncPriority";
 				if ( $getColdbox().handlerExists( asyncPriorityHandler ) ) {
 					var priority = $runEvent(
