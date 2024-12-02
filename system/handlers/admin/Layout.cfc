@@ -89,6 +89,7 @@ component {
 		var preparedMenuItems = adminMenuItemService.prepareMenuItemsForRequest(
 			  menuItems      = args.menuItems      ?: adminSideBarItems
 			, legacyViewBase = args.legacyViewBase ?: "/admin/layout/sidebar/"
+			, runActiveChecks = isTrue( args.runActiveChecks ?: "" )
 		);
 
 		return renderViewlet( event="admin.layout.renderMenuItems", args={

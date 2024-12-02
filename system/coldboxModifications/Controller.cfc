@@ -114,7 +114,7 @@ component extends="coldbox.system.web.Controller" {
 			);
 		}
 
-		var useCache = arguments.cache && !_isAdminLoggedIn();
+		var useCache = arguments.cache;
 		if ( useCache ) {
 			var cache    = getCachebox().getCache( arguments.cacheProvider );
 			var cacheKey = "renderViewletCache:" & arguments.event & arguments.cacheSuffix;
