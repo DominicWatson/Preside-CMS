@@ -1346,7 +1346,7 @@ component displayName="Preside Object Service" {
 
 		if ( Len( Trim( pivotTable ) ) and Len( Trim( targetObject ) ) ) {
 			var newRecords      = ListToArray( arguments.targetIdList );
-			var newAddedRecords = duplicate( newRecords );
+			var newAddedRecords = ListToArray( arguments.targetIdList );
 			var existingRecords = [];
 			var anythingChanged = false;
 			var sortOrderField  = getObjectAttribute( pivotTable, "datamanagerSortField", "sort_order" );
@@ -2569,7 +2569,7 @@ component displayName="Preside Object Service" {
 		, required string objectName
 	) {
 		var extraFilters = arguments.extraFilters;
-		var selectFields = Duplicate( arguments.selectFields );
+		var selectFields = _arrayCopy( arguments.selectFields );
 		var props        = getObjectProperties( arguments.objectName );
 		var labelField   = getLabelField( arguments.objectName );
 
@@ -3071,7 +3071,7 @@ component displayName="Preside Object Service" {
 		}
 
 		var key        = "";
-		var all        = Duplicate( arguments.data );
+		var all        = _deepishDuplicate( arguments.data );
 		var fieldRegex = _getAlaisedFieldRegex();
 		var entities   = _getEntityNames();
 		var field      = "";
@@ -3563,8 +3563,8 @@ component displayName="Preside Object Service" {
 		var versionObj           = _getObject( getVersionObjectName( arguments.objectName ) ).meta;
 		var usesDrafts           = objectUsesDrafts( arguments.objectName );
 		var versionTableName     = versionObj.tableName;
-		var compiledSelectFields = Duplicate( arguments.selectFields );
-		var compiledFilter       = Duplicate( arguments.filter );
+		var compiledSelectFields = _arrayCopy( arguments.selectFields );
+		var compiledFilter       = IsStruct( arguments.filter ) ? _deepishDuplicate( arguments.filter ) : arguments.filter;
 		var sql                  = "";
 		var versionFilter        = "";
 		var args                 = {};
@@ -3699,7 +3699,7 @@ component displayName="Preside Object Service" {
 	}
 
 	private array function _arrayMerge( required array arrayA, required array arrayB ) {
-		var newArray = Duplicate( arguments.arrayA );
+		var newArray = _arrayCopy( arguments.arrayA );
 		var node     = "";
 
 		for( node in arguments.arrayB ){
@@ -3903,12 +3903,12 @@ component displayName="Preside Object Service" {
 
 		var idField = getIdField( arguments.objectName );
 		var result = {
-			  filter       = StructKeyExists( arguments, "id" ) ? { "#idField#" = arguments.id } : Duplicate( arguments.filter )
-			, filterParams = Duplicate( arguments.filterParams )
-			, having       = Duplicate( arguments.having )
+			  filter       = StructKeyExists( arguments, "id" ) ? { "#idField#" = arguments.id } : ( IsStruct( arguments.filter ) ? _deepishDuplicate( arguments.filter ) : arguments.filter )
+			, filterParams = _deepishDuplicate( arguments.filterParams )
+			, having       = arguments.having
 		};
 		if ( IsStruct( result.filter ) && ( arguments.extraFilters.len() || arguments.savedFilters.len() ) ) {
-			result.filterParams.append( Duplicate( result.filter ) );
+			StructAppend( result.filterParams, result.filter );
 		}
 
 		for( var extraFilter in arguments.extraFilters ){
@@ -3995,7 +3995,7 @@ component displayName="Preside Object Service" {
 
 	private struct function _addDefaultValuesToDataSet( required string objectName, required struct data ) {
 		var props   = getObjectProperties( arguments.objectName );
-		var newData = Duplicate( arguments.data );
+		var newData = _deepishDuplicate( arguments.data );
 
 		for( var propName in props ){
 			if ( !StructKeyExists( arguments.data, propName ) && Len( Trim( props[ propName ].default ?: "" ) ) ) {
@@ -4025,7 +4025,7 @@ component displayName="Preside Object Service" {
 	private struct function _addGeneratedValues( required string operation, required string objectName, required struct data, string id="" ) {
 		var obj       = getObject( arguments.objectName );
 		var props     = getObjectProperties( arguments.objectName );
-		var newData   = Duplicate( arguments.data );
+		var newData   = _deepishDuplicate( arguments.data );
 		var generated = {};
 		var genOps    = arguments.operation == "insert" ? [ "insert", "always" ] : [ "always" ];
 
@@ -4164,7 +4164,7 @@ component displayName="Preside Object Service" {
 	}
 
 	private boolean function _isDraft( array extraFilters=[] ) {
-		var draftCheckFilters = Duplicate( arguments.extraFilters );
+		var draftCheckFilters = _arrayCopy( arguments.extraFilters );
 
 		draftCheckFilters.append( { filter={ _version_is_draft=true } } );
 
@@ -4326,14 +4326,32 @@ component displayName="Preside Object Service" {
 		for( var key in arguments.args ) {
 			if ( IsNull( arguments.args[ key ] ) ){
 				continue;
-			} else if ( IsStruct( arguments.args[ key ] ) || IsArray( arguments.args[ key ] ) ) {
-				newArgs[ key ] = Duplicate( arguments.args[ key ] );
+			} else if ( IsArray( arguments.args[ key ] ) ) {
+				newArgs[ key ] = _arrayCopy( arguments.args[ key ] );
+			} else if ( IsStruct( arguments.args[ key ] ) ) {
+				newArgs[ key ] = _deepishDuplicate( arguments.args[ key ] );
 			} else {
 				newArgs[ key ] = arguments.args[ key ];
 			}
 		}
 
 		return newArgs;
+	}
+
+	private function _arrayCopy( arr ) {
+		var cpy = [];
+
+		for ( var v in arr ) {
+			if ( IsStruct( v ) ) {
+				ArrayAppend( cpy, _deepishDuplicate( v ) );
+			} else if ( IsArray( v ) ) {
+				ArrayAppend( cpy, _arrayCopy( v ) );
+			} else {
+				ArrayAppend( cpy, v );
+			}
+		}
+
+		return cpy;
 	}
 
 	private boolean function _canFieldBeCounted( required string field ) {
