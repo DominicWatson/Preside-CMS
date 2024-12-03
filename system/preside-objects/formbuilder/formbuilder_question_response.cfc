@@ -37,8 +37,8 @@ component displayname="Form builder: global question response" extends="preside.
 	property name="website_user" relationship="many-to-one" relatedto="website_user"               required=false excludeDataExport=true adminRenderer="none" feature="websiteUsers";
 	property name="admin_user"   relationship="many-to-one" relatedto="security_user"              required=false excludeDataExport=true adminRenderer="none" feature="admin";
 
-	property name="is_website_user" type="boolean" dbtype="boolean" formula="case when ${prefix}website_user is not null then 1 else 0 end"  adminRenderer="none";
-	property name="is_admin_user"   type="boolean" dbtype="boolean" formula="case when ${prefix}admin_user is not null then 1 else 0 end"  adminRenderer="none";
+	property name="is_website_user" type="boolean" dbtype="boolean" formula="case when ${prefix}website_user is not null then 1 else 0 end" adminRenderer="none" feature="websiteUsers";
+	property name="is_admin_user"   type="boolean" dbtype="boolean" formula="case when ${prefix}admin_user is not null then 1 else 0 end"   adminRenderer="none" feature="admin";
 
 	property name="parent_name"     type="string"  dbtype="varchar" formula="case when ${prefix}submission_type='formbuilder' then ${prefix}submission$form.name else '' end "  adminRenderer="none";
 

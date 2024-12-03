@@ -1183,10 +1183,13 @@ component {
 		var extraFilters   = [];
 		var sortBy         = ListFirst( arguments.orderBy, " " );
 		var sortOrder      = ListLast( arguments.orderBy, " " );
+		var websiteUsers   = $helpers.isFeatureEnabled( "websiteUsers" );
 
 		switch( sortBy ) {
 			case "submitted_by":
-				sortBy = "submitted_by.display_name";
+				if ( websiteUsers ) {
+					sortBy = "submitted_by.display_name";
+				}
 				break;
 			case "datecreated":
 			case "instanceId":
@@ -1205,10 +1208,14 @@ component {
 		}
 
 		if ( Len( Trim( arguments.searchQuery ) ) ) {
-			extraFilters.append({
-				  filter       = "submitted_by.display_name like :q or formbuilder_formsubmission.form_instance like :q or formbuilder_formsubmission.submitted_data like :q"
+			var searchFilter = "formbuilder_formsubmission.form_instance like :q or formbuilder_formsubmission.submitted_data like :q";
+			if ( websiteUsers ) {
+				searchFilter = "submitted_by.display_name like :q or " & searchFilter;
+			}
+			extraFilters.append( {
+				  filter       = searchFilter
 				, filterParams = { q = { type="cf_sql_varchar", value="%#arguments.searchQuery#%" } }
-			});
+			} );
 		}
 		if ( Len( Trim( sFilterExpression ?: "" ) ) ) {
 
@@ -1229,19 +1236,22 @@ component {
 			}
 		}
 
+		var selectFields = [
+			  "formbuilder_formsubmission.id"
+			, "formbuilder_formsubmission.submitted_data"
+			, "formbuilder_formsubmission.form_instance"
+			, "formbuilder_formsubmission.datecreated"
+		];
+		if ( websiteUsers ) {
+			ArrayAppend( selectFields, "submitted_by.id as submitted_by" );
+		}
 		result.records = submissionsDao.selectData(
 			  filter       = { form = arguments.formId }
 			, extraFilters = extraFilters
 			, startRow     = arguments.startRow
 			, maxRows      = arguments.maxRows
 			, orderBy      = "#sortby# #sortorder#"
-			, selectFields = [
-				  "formbuilder_formsubmission.id"
-				, "formbuilder_formsubmission.submitted_data"
-				, "formbuilder_formsubmission.form_instance"
-				, "formbuilder_formsubmission.datecreated"
-				, "submitted_by.id as submitted_by"
-			]
+			, selectFields = selectFields
 		);
 
 		result.totalRecords = submissionsDao.selectData(
@@ -1439,7 +1449,6 @@ component {
 
 		switch( sortBy ) {
 			case "submitted_by":
-				sortBy = "submitted_by";
 				break;
 			case "datecreated":
 			case "instanceId":
@@ -1470,10 +1479,10 @@ component {
 		}
 
 		if ( Len( Trim( arguments.searchQuery ) ) ) {
-			extraFilters.append({
+			extraFilters.append( {
 				  filter       = "submitted_by like :q or formbuilder_question_response.response like :q"
 				, filterParams = { q = { type="cf_sql_varchar", value="%#arguments.searchQuery#%" } }
-			});
+			} );
 		}
 
 		if ( Len( Trim( arguments.savedFilterExpIdLists ?: "" ) ) ) {
@@ -1485,6 +1494,30 @@ component {
 			}
 		}
 
+		var selectFields = [
+			  "formbuilder_question_response.id"
+			, "formbuilder_question_response.submission"
+			, "formbuilder_question_response.question"
+			, "formbuilder_question_response.response"
+			, "formbuilder_question_response.datecreated"
+			, "formbuilder_question_response.submitted_by"
+			, "formbuilder_question_response.submission_type"
+			, "formbuilder_question_response.submission_reference"
+			, "submission$form.name as form_name"
+			, "question.item_type"
+		];
+		if ( $helpers.isFeatureEnabled( "websiteUsers" ) ) {
+			ArrayAppend( selectFields, [
+				  "formbuilder_question_response.website_user"
+				, "formbuilder_question_response.is_website_user"
+			], true );
+		}
+		if ( $helpers.isFeatureEnabled( "admin" ) ) {
+			ArrayAppend( selectFields, [
+				  "formbuilder_question_response.admin_user"
+				, "formbuilder_question_response.is_admin_user"
+			], true );
+		}
 		result.records = questionResponsesDao.selectData(
 			  filter       = { question = arguments.questionId }
 			, extraFilters = extraFilters
@@ -1492,22 +1525,7 @@ component {
 			, maxRows      = arguments.maxRows
 			, orderBy      = "#sortby# #sortorder#"
 			, groupBy      = "submission, question"
-			, selectFields = [
-				  "formbuilder_question_response.id"
-				, "formbuilder_question_response.submission"
-				, "formbuilder_question_response.question"
-				, "formbuilder_question_response.response"
-				, "formbuilder_question_response.datecreated"
-				, "formbuilder_question_response.submitted_by"
-				, "formbuilder_question_response.website_user"
-				, "formbuilder_question_response.is_website_user"
-				, "formbuilder_question_response.admin_user"
-				, "formbuilder_question_response.is_admin_user"
-				, "formbuilder_question_response.submission_type"
-				, "formbuilder_question_response.submission_reference"
-				, "submission$form.name as form_name"
-				, "question.item_type"
-			]
+			, selectFields = selectFields
 		);
 
 		if ( arguments.startRow eq 1 and result.records.recordCount lt arguments.maxRows ) {
@@ -1552,17 +1570,22 @@ component {
 		var canLog            = StructKeyExists( arguments, "logger" );
 		var canInfo           = canLog && logger.canInfo();
 		var canReportProgress = StructKeyExists( arguments, "progress" );
+		var websiteUsers      = $helpers.isFeatureEnabled( "websiteUsers" );
 		var renderingService  = _getFormBuilderRenderingService();
 		var formItems         = getFormItems( arguments.formId );
 		var spreadsheetLib    = _getSpreadsheetLib();
 		var workbook          = spreadsheetLib.new();
-		var headers           = [ "Submission ID", "Submission date", "Submitted by logged in user", "Form instance ID" ];
+		var headers           = [ "Submission ID", "Submission date", "Form instance ID" ];
 		var itemColumnMap     = {};
 		var itemsToRender     = [];
 		var submissions       = $getPresideObject( "formbuilder_formsubmission" ).selectData(
 			  filter  = { form = arguments.formId }
 			, orderBy = "datecreated"
 		);
+
+		if ( websiteUsers ) {
+			ArrayInsertAt( headers, 3, "Submitted by logged in user" );
+		}
 
 		if ( canInfo ) {
 			logger.info( "Fetched [#NumberFormat( submissions.recordcount )#] submissions, preparing to export..." );
@@ -1591,12 +1614,14 @@ component {
 
 		var row = 1;
 		for( var submission in submissions ) {
-			var column      = 4;
-			var submittedBy = Len( submission.submitted_by ) ? $renderLabel( "website_user", submission.submitted_by ) : "";
+			var column = 4;
 			row++;
 			spreadsheetLib.setCellValue( workbook, submission.id, row, 1, "string" );
 			spreadsheetLib.setCellValue( workbook, DateTimeFormat( submission.datecreated, "yyyy-mm-dd HH:nn:ss" ), row, 2, "string" );
-			spreadsheetLib.setCellValue( workbook, submittedBy, row, 3, "string" );
+			if ( websiteUsers ) {
+				var submittedBy = Len( submission.submitted_by ) ? $renderLabel( "website_user", submission.submitted_by ) : "";
+				spreadsheetLib.setCellValue( workbook, submittedBy, row, 3, "string" );
+			}
 			spreadsheetLib.setCellValue( workbook, submission.form_instance, row, 4, "string" );
 
 			if ( itemsToRender.len() ) {
@@ -1705,7 +1730,8 @@ component {
 		,          any     progress
 	) {
 		var questionDefinition = getQuestion( arguments.questionId );
-		var exportFieldList = listToArray( arguments.exportFields );
+		var exportFieldList    = listToArray( arguments.exportFields );
+		var websiteUsers       = $helpers.isFeatureEnabled( "websiteUsers" );
 
 		if ( !questionDefinition.recordCount ) {
 			if ( canReportProgress ) {
@@ -1756,8 +1782,7 @@ component {
 
 		var row = 1;
 		for( var response in responses ) {
-			var column      = 0;
-			var submittedBy = Len( response.submitted_by ) ? $renderLabel( "website_user", response.submitted_by ) : "";
+			var column = 0;
 			row++;
 
 			if ( ArrayContains( exportFieldList, "id" ) ) {
@@ -1769,13 +1794,14 @@ component {
 			if ( ArrayContains( exportFieldList, "submission_reference" ) ) {
 				spreadsheetLib.setCellValue( workbook, response.submission_reference, row, ++column, "string" );
 			}
-			if ( ArrayContains( exportFieldList, "submitted_by" ) ) {
-				spreadsheetLib.setCellValue( workbook, response.submitted_by, row, ++column, "string" );
+			if ( websiteUsers && ArrayContains( exportFieldList, "submitted_by" ) ) {
+				var submittedBy = Len( response.submitted_by ) ? $renderLabel( "website_user", response.submitted_by ) : "";
+				spreadsheetLib.setCellValue( workbook, submittedBy, row, ++column, "string" );
 			}
 			if ( ArrayContains( exportFieldList, "datecreated" ) ) {
 				spreadsheetLib.setCellValue( workbook, DateTimeFormat( response.datecreated, "yyyy-mm-dd HH:nn:ss" ), row, ++column, "string" );
 			}
-			if ( ArrayContains( exportFieldList, "is_website_user" ) ) {
+			if ( websiteUsers && ArrayContains( exportFieldList, "is_website_user" ) ) {
 				spreadsheetLib.setCellValue( workbook, response.is_website_user, row, ++column, "string" );
 			}
 			if ( ArrayContains( exportFieldList, "parent_name" ) ) {
@@ -1870,7 +1896,8 @@ component {
 		,          any     progress
 	) {
 		var questionDefinition = getQuestion( arguments.questionId );
-		var exportFieldList = listToArray( arguments.exportFields );
+		var exportFieldList    = listToArray( arguments.exportFields );
+		var websiteUsers       = $helpers.isFeatureEnabled( "websiteUsers" );
 
 		if ( !questionDefinition.recordCount ) {
 			if ( canReportProgress ) {
@@ -1890,6 +1917,9 @@ component {
 		var writer   = _getCsvWriter().newWriter( tmpFile, "," );
 
 		for ( var field in exportFields ) {
+			if ( !websiteUsers && ArrayFind( [ "submitted_by", "is_website_user" ], field ) ) {
+				continue;
+			}
 			headers.append( $translateResource( uri="preside-objects.formbuilder_question_response:field.#field#.title" ) );
 		}
 
@@ -1927,7 +1957,6 @@ component {
 			var rowNumber=1;
 			for( var response in responses ) {
 				row=[];
-				var submittedBy = Len( response.submitted_by ) ? $renderLabel( "website_user", response.submitted_by ) : "";
 
 
 				if ( ArrayContains( exportFieldList, "id" ) ) {
@@ -1939,13 +1968,14 @@ component {
 				if ( ArrayContains( exportFieldList, "submission_reference" ) ) {
 					row.append( response.submission_reference );
 				}
-				if ( ArrayContains( exportFieldList, "submitted_by" ) ) {
-					row.append( response.submitted_by );
+				if ( websiteUsers && ArrayContains( exportFieldList, "submitted_by" ) ) {
+					var submittedBy = Len( response.submitted_by ) ? $renderLabel( "website_user", response.submitted_by ) : "";
+					row.append( submittedBy );
 				}
 				if ( ArrayContains( exportFieldList, "datecreated" ) ) {
 					row.append( DateTimeFormat( response.datecreated, "yyyy-mm-dd HH:nn:ss" ) );
 				}
-				if ( ArrayContains( exportFieldList, "is_website_user" ) ) {
+				if ( websiteUsers && ArrayContains( exportFieldList, "is_website_user" ) ) {
 					row.append( response.is_website_user );
 				}
 				if ( ArrayContains( exportFieldList, "parent_name" ) ) {
@@ -2371,25 +2401,31 @@ component {
 			}
 		}
 
+		var selectFields = [
+			  "formbuilder_question_response.id"
+			, "formbuilder_question_response.submission"
+			, "formbuilder_question_response.question"
+			, "formbuilder_question_response.response"
+			, "formbuilder_question_response.datecreated"
+			, "formbuilder_question_response.submitted_by"
+			, "formbuilder_question_response.submission_type"
+			, "formbuilder_question_response.submission_reference"
+			, "formbuilder_question_response.parent_name"
+		];
+		if ( $helpers.isFeatureEnabled( "websiteUsers" ) ) {
+			ArrayAppend( selectFields, "formbuilder_question_response.is_website_user" );
+		}
+		if ( $helpers.isFeatureEnabled( "admin" ) ) {
+			ArrayAppend( selectFields, "formbuilder_question_response.is_admin_user" );
+		}
+
 		var questionResponsesDao = $getPresideObject( "formbuilder_question_response" );
 		var responses = questionResponsesDao.selectData(
 			  filter       = { question = arguments.questionId }
 			, orderBy      = "datecreated"
 			, groupBy      = "submission, question"
 			, extraFilters = extraFilters
-			, selectFields = [
-				  "formbuilder_question_response.id"
-				, "formbuilder_question_response.submission"
-				, "formbuilder_question_response.question"
-				, "formbuilder_question_response.response"
-				, "formbuilder_question_response.datecreated"
-				, "formbuilder_question_response.submitted_by"
-				, "lformbuilder_question_response.is_website_user"
-				, "formbuilder_question_response.is_admin_user"
-				, "formbuilder_question_response.submission_type"
-				, "formbuilder_question_response.submission_reference"
-				, "formbuilder_question_response.parent_name"
-			]
+			, selectFields = selectFields
 		);
 
 		return responses;

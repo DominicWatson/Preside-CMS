@@ -317,8 +317,9 @@ component {
 	) {
 		var submissionsDao = $getPresideObject( "formbuilder_formsubmission" );
 		var filter         = {};
+		var websiteUsers   = $helpers.isFeatureEnabled( "websiteUsers" );
 
-		if ( Len( arguments.userId ) ) {
+		if ( websiteUsers && Len( arguments.userId ) ) {
 			filter.submitted_by = arguments.userId;
 		}
 
@@ -550,7 +551,6 @@ component {
 		  , extraFilters = arguments.extraFilters
 		);
 	}
-
 
 	public array function prepareFilterForUserHasSubmittedFormFilter(
 		  required array  formId
