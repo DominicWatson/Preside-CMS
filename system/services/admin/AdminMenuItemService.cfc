@@ -60,10 +60,11 @@ component {
 		var flatItems      = [];
 		var expandItems    = function( children ){
 			for( var childId in children ) {
-				ArrayAppend( flatItems, childId );
 				var childItem = settings[ childId ] ?: {};
 				if ( StructKeyExists( childItem, "subMenuItems" ) && IsArray( childItem.subMenuItems ) && ArrayLen( childItem.subMenuItems ) ) {
 					expandItems( childItem.subMenuItems );
+				} else {
+					ArrayAppend( flatItems, childId );
 				}
 			}
 		};
