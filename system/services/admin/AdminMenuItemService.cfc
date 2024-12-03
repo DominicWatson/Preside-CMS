@@ -53,7 +53,7 @@ component {
 	}
 
 	public string function getActiveItemForRequest( required array menuItems ) {
-		var settings = _getItemSettings();
+		var settings       = _getItemSettings();
 		var requestContext = $getRequestContext();
 		var prc            = requestContext.getCollection( private=true );
 		var dmObject       = requestContext.isDataManagerRequest() ? ( prc.objectName ?: "" ) : "";
@@ -136,8 +136,6 @@ component {
 				return itemId;
 			}
 		}
-
-
 
 		return "";
 	}
