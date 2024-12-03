@@ -4308,10 +4308,10 @@ component displayName="Preside Object Service" {
 		for( var key in arguments.args ) {
 			if ( IsNull( arguments.args[ key ] ) ){
 				continue;
-			} else if ( IsArray( arguments.args[ key ] ) ) {
-				newArgs[ key ] = _arrayCopy( arguments.args[ key ] );
 			} else if ( IsStruct( arguments.args[ key ] ) ) {
 				newArgs[ key ] = _deepishDuplicate( arguments.args[ key ] );
+			} else if ( IsArray( arguments.args[ key ] ) ) {
+				newArgs[ key ] = _arrayCopy( arguments.args[ key ] );
 			} else {
 				newArgs[ key ] = arguments.args[ key ];
 			}
