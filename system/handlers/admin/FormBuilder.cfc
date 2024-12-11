@@ -383,6 +383,9 @@ component extends="preside.system.base.AdminHandler" {
 
 		var theQuestion        =      formBuilderService.getQuestion( questionId );
 
+		if ( !isFeatureEnabled( "websiteUsers" ) ) {
+			exportFields = ListDeleteAt( exportFields, ListFind( exportFields, "submitted_by" ) );
+		}
 		if ( !theQuestion.recordCount ) {
 			event.adminNotFound();
 		}
@@ -414,6 +417,10 @@ component extends="preside.system.base.AdminHandler" {
 		var questionId   = args.questionId   ?: "";
 		var exportFields = args.exportFields ?: "id,submission_type,submission_reference,submitted_by,datecreated,is_website_user,parent_name";
 		var exporter     = args.exporter     ?: "Excel"
+
+		if ( !isFeatureEnabled( "websiteUsers" ) ) {
+			exportFields = ListDeleteAt( exportFields, ListFind( exportFields, "submitted_by" ) );
+		}
 
 		formBuilderService.exportQuestionResponses(
 			  questionId        = questionId
@@ -740,6 +747,10 @@ component extends="preside.system.base.AdminHandler" {
 		var records = Duplicate( results.records );
 		var viewSubmissionTitle   = translateResource( "formbuilder:view.submission.modal.title" );
 		var deleteSubmissionTitle = translateResource( "formbuilder:delete.submission.prompt" );
+
+		if ( !isFeatureEnabled( "websiteUsers" ) ) {
+			ArrayDelete( gridFields, "submitted_by" );
+		}
 
 		for( var record in records ){
 			for( var field in gridFields ){
