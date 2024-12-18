@@ -41,7 +41,11 @@ component displayname="Site service" {
 	 * Returns a query of all the registered sites
 	 */
 	public query function listSites() output=false autodoc=true {
-		return _getSiteDao().selectData( orderBy="name", filter={ deleted=false } );
+		return _getSiteDao().selectData(
+			  orderBy      = "name"
+			, filter       = "deleted is null or deleted=:deleted"
+			, filterParams = { deleted=false }
+		);
 	}
 
 	/**
