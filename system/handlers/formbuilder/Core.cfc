@@ -44,9 +44,11 @@ component {
 		}
 
 		var validationResult = formBuilderService.saveFormSubmission(
-			  formId      = formId
-			, requestData = submission
-			, instanceId  = ( rc.instanceId ?: "" )
+			  formId       = formId
+			, requestData  = submission
+			, instanceId   = ( rc.instanceId   ?: "" )
+			, instanceSite = ( rc.instanceSite ?: "" )
+			, instanceUrl  = ( rc.instanceUrl  ?: "" )
 		);
 
 		if ( event.isAjax() ) {
