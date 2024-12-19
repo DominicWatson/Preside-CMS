@@ -1012,9 +1012,11 @@ component {
 	public any function saveFormSubmission(
 		  required string formId
 		, required struct requestData
-		,          string instanceId  = ""
-		,          string ipAddress   = Trim( ListLast( cgi.remote_addr ?: "" ) )
-		,          string userAgent   = ( cgi.http_user_agent ?: "" )
+		,          string instanceId   = ""
+		,          string instanceSite = ""
+		,          string instanceUrl  = ""
+		,          string ipAddress    = Trim( ListLast( cgi.remote_addr ?: "" ) )
+		,          string userAgent    = ( cgi.http_user_agent ?: "" )
 	) {
 		setFormBuilderSubmissionContextData( arguments.formId, arguments.requestData );
 
@@ -1045,20 +1047,26 @@ component {
 		if ( validationResult.validated() ) {
 			if ( isV2Form( arguments.formid ) ) {
 				submissionId = $getPresideObject( "formbuilder_formsubmission" ).insertData( data={
-					  form           = arguments.formId
-					, submitted_by   = $getWebsiteLoggedInUserId()
-					, form_instance  = arguments.instanceId
-					, ip_address     = arguments.ipAddress
-					, user_agent     = arguments.userAgent
+					  form          = arguments.formId
+					, submitted_by  = $getWebsiteLoggedInUserId()
+					, form_instance = arguments.instanceId
+					, form_site     = arguments.instanceSite
+					, form_url      = arguments.instanceUrl
+					, ip_address    = arguments.ipAddress
+					, user_agent    = arguments.userAgent
 				} );
+
 				saveV2Responses( formId=arguments.formId, formData=formData, formItems=formItems, submissionId=submissionId );
 			} else {
 				formData = renderResponsesForSaving( formId=arguments.formId, formData=formData, formItems=formItems );
+
 				submissionId = $getPresideObject( "formbuilder_formsubmission" ).insertData( data={
 					  form           = arguments.formId
 					, submitted_by   = $getWebsiteLoggedInUserId()
 					, submitted_data = SerializeJson( formData )
 					, form_instance  = arguments.instanceId
+					, form_site      = arguments.instanceSite
+					, form_url       = arguments.instanceUrl
 					, ip_address     = arguments.ipAddress
 					, user_agent     = arguments.userAgent
 				} );
