@@ -875,16 +875,18 @@ component extends="testbox.system.BaseSpec"{
 
 			it( "should save submission data to a form builder submission object when validation passes", function(){
 				var service            = getService();
-				var formId             = CreateUUId();
+				var formId             = CreateUUID();
 				var requestData        = { some="data" };
-				var formSubmissionData = { some="data", tests=CreateUUId() };
+				var formSubmissionData = { some="data", tests=CreateUUID() };
 				var formConfiguration  = QueryNew( 'use_captcha', "boolean", [ [ true ] ] );
 				var formItems          = [ "just", "test", "data" ];
 				var validationResult   = CreateEmptyMock( "preside.system.services.validation.ValidationResult" );
-				var userAgent          = CreateUUId();
+				var userAgent          = CreateUUID();
 				var ipAddress          = "219.349.93.4";
-				var instanceId         = "TEST" & CreateUUId();
-				var userid             = CreateUUId();
+				var instanceId         = "TEST" & CreateUUID();
+				var instanceSite       = CreateUUID();
+				var instanceUrl        = "/helloworld.html";
+				var userid             = CreateUUID();
 
 				service.$( "renderResponsesForSaving", formSubmissionData );
 				service.$( "isV2Form", false );
@@ -905,11 +907,13 @@ component extends="testbox.system.BaseSpec"{
 				mockActionsService.$( "triggerSubmissionActions" );
 
 				expect( service.saveFormSubmission(
-					  formId      = formId
-					, requestData = requestData
-					, instanceId  = instanceId
-					, ipAddress   = ipAddress
-					, userAgent   = userAgent
+					  formId       = formId
+					, requestData  = requestData
+					, instanceId   = instanceId
+					, instanceSite = instanceSite
+					, instanceUrl  = instanceUrl
+					, ipAddress    = ipAddress
+					, userAgent    = userAgent
 				) ).toBe( validationResult );
 
 				expect( mockFormSubmissionDao.$callLog().insertData.len() ).toBe( 1 );
@@ -917,6 +921,8 @@ component extends="testbox.system.BaseSpec"{
 					  form           = formId
 					, submitted_by   = userId
 					, form_instance  = instanceId
+					, form_site      = instanceSite
+					, form_url       = instanceUrl
 					, ip_address     = ipAddress
 					, user_agent     = userAgent
 					, submitted_data = SerializeJson( formSubmissionData )
