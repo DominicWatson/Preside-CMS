@@ -850,12 +850,11 @@ component {
 			updated = pobj.updateData(
 				  data                    = data
 				, id                      = arguments.id
+				, useVersioning           = !arguments.skipVersioning
 				, versionNumber           = versionNumber
 				, updateManyToManyRecords = true
 				, forceVersionCreation    = arguments.forceVersionCreation ?: ( pageDataHasChanged || pageTypeDataHasChanged )
 				, isDraft                 = ( arguments.isDraft || pageDataHasChanged || pageTypeDataHasChanged ) ? arguments.isDraft : false
-				, useVersioning           = ( pageDataHasChanged || pageTypeDataHasChanged ) ? !arguments.skipVersioning : false
-				, setDateModified         = ( pageDataHasChanged || pageTypeDataHasChanged ) ? true : false
 			);
 
 			if ( _getPageTypesService().pageTypeExists( existingPage.page_type ) ) {
@@ -867,8 +866,7 @@ component {
 						, updateManyToManyRecords = true
 						, forceVersionCreation    = arguments.forceVersionCreation ?: ( pageDataHasChanged || pageTypeDataHasChanged )
 						, isDraft                 = ( arguments.isDraft || pageDataHasChanged || pageTypeDataHasChanged ) ? arguments.isDraft : false
-						, useVersioning           = ( pageDataHasChanged || pageTypeDataHasChanged ) ? !arguments.skipVersioning : false
-						, setDateModified         = ( pageDataHasChanged || pageTypeDataHasChanged ) ? true : false
+						, useVersioning           = !arguments.skipVersioning
 					);
 				} else {
 					var insertData = Duplicate( arguments );
