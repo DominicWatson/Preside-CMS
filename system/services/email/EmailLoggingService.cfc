@@ -4,6 +4,7 @@
  * @autodoc        true
  * @singleton      true
  * @presideService true
+ * @feature        emailCenter
  */
 component {
 
@@ -140,7 +141,7 @@ component {
 		} );
 
 		if ( updated ) {
-			if ( !$helpers.isEmptyString( arguments.templateId ) ) {
+			if ( !$helpers.isEmptyString( arguments.templateId ) && _getEmailTemplateService().templateExists( id=arguments.templateId ) ) {
 				_getEmailTemplateService().updateLastSentDate( templateId=arguments.templateId, lastSentDate=now );
 			}
 
@@ -801,6 +802,7 @@ component {
 			, "email_template_send_log.email_template"
 			, "email_template_send_log.datecreated"
 			, "email_template_send_log.resend_of"
+			, "email_template_send_log.send_args"
 			, "email_template.name"
 			, "email_template.recipient_type"
 		];

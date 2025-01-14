@@ -1,5 +1,5 @@
 <cfscript>
-	dirs = DirectoryList( path="integration/api", listinfo="name" );
+	dirs = DirectoryList( path="unit/api", listinfo="name" );
 	ArraySort( dirs, "text" );
 </cfscript>
 <style>
@@ -34,7 +34,7 @@
 	<title>Preside Test Suite</title>
 </head>
 <body>
-	<cfoutput> 
+	<cfoutput>
 	<h1>
 		<img src="preside-logo.png" alt="Preside" width="138" height="48"><br>
 		Welcome to the Preside test suite<br>

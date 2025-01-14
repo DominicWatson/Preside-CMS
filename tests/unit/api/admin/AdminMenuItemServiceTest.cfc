@@ -63,8 +63,8 @@ component extends="tests.resources.HelperObjects.PresideBddTestCase" {
 				expect( svc.itemHasHandlerAction( itemId, action ) ).toBeTrue();
 			} );
 			it( "should return true when item does not have corresponding convention based handler", function(){
-				var svc    = _getService();		
-				
+				var svc    = _getService();
+
 				var itemId = CreateUUId();
 				var action = CreateUUId();
 
@@ -151,7 +151,7 @@ component extends="tests.resources.HelperObjects.PresideBddTestCase" {
 
 				svc.$( "itemIsLegacyViewImplementation" ).$args( itemId, legacyViewBase ).$results( true );
 
-				expect( svc.getRawItemConfig( itemId, legacyViewBase ) ).toBe( { view=legacyViewBase & itemId } );
+				expect( svc.getRawItemConfig( itemId, legacyViewBase ) ).toBe( { view=legacyViewBase & itemId, id=itemId } );
 			} );
 
 			it( "should return any configuration specified in config.cfc for the item", function(){
@@ -166,6 +166,7 @@ component extends="tests.resources.HelperObjects.PresideBddTestCase" {
 
 				expect( config.thisIsATest ?: "noitisnot" ).toBe( "yesitis" );
 			} );
+
 		} );
 
 		describe( "prepareItemForRequest( itemId, legacyViewBase )", function(){

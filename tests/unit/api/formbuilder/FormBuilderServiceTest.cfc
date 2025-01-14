@@ -29,6 +29,7 @@ component extends="testbox.system.BaseSpec"{
 				var service = getService();
 				var formId  = CreateUUId();
 
+				service.$( "isV2Form", true );
 				mockFormItemDao.$( "selectData" ).$args(
 					  filter       = { form=formId }
 					, orderBy      = "sort_order"
@@ -74,6 +75,7 @@ component extends="testbox.system.BaseSpec"{
 					, { id="item7", type=types.b, formId=formId, questionId=questionId, item_type="typeb", configuration={ name="some_field", label="A long question", help="some help" } }
 				];
 
+				service.$( "isV2Form", true );
 				mockItemTypesService.$( "getItemTypeConfig" ).$args( "typea" ).$results( types.a );
 				mockItemTypesService.$( "getItemTypeConfig" ).$args( "typeb" ).$results( types.b );
 				mockQuestionDao.$( "selectData" ).$args( id=questionId ).$results( mockQuestionQuery );
@@ -100,6 +102,7 @@ component extends="testbox.system.BaseSpec"{
 				] );
 				var expectedResult = { cat="dog", test=true };
 
+				service.$( "isV2Form", true );
 				mockItemTypesService.$( "getItemTypeConfig", {} );
 				mockFormItemDao.$( "selectData" ).$args(
 					  filter       = { form=formId }
@@ -136,16 +139,18 @@ component extends="testbox.system.BaseSpec"{
 					, c = { test=true, something=CreateUUId() }
 				};
 				var expectedResult = [
-					  { id="item1", type=types.a, formId=formId, questionId="", item_type="typea", configuration={} }
-					, { id="item5", type=types.a, formId=formId, questionId="", item_type="typea", configuration={} }
-					, { id="item6", type=types.a, formId=formId, questionId="", item_type="typea", configuration={} }
-					, { id="item7", type=types.c, formId=formId, questionId="", item_type="typec", configuration={} }
+					  { id="item1", type=types.a, formId=formId, item_type="typea", configuration={} }
+					, { id="item5", type=types.a, formId=formId, item_type="typea", configuration={} }
+					, { id="item6", type=types.a, formId=formId, item_type="typea", configuration={} }
+					, { id="item7", type=types.c, formId=formId, item_type="typec", configuration={} }
 				];
 
 				mockItemTypesService.$( "getItemTypeConfig" ).$args( "typea" ).$results( types.a );
 				mockItemTypesService.$( "getItemTypeConfig" ).$args( "typeb" ).$results( types.b );
 				mockItemTypesService.$( "getItemTypeConfig" ).$args( "typec" ).$results( types.c );
 
+				service.$( "isV2Form", true );
+				mockFormItemDao.$( "dataExists" ).$args( filter={ id=formId, uses_global_questions=true } ).$results( true );
 				mockFormItemDao.$( "selectData" ).$args(
 					  filter       = { form=formId }
 					, orderBy      = "sort_order"
@@ -870,16 +875,18 @@ component extends="testbox.system.BaseSpec"{
 
 			it( "should save submission data to a form builder submission object when validation passes", function(){
 				var service            = getService();
-				var formId             = CreateUUId();
+				var formId             = CreateUUID();
 				var requestData        = { some="data" };
-				var formSubmissionData = { some="data", tests=CreateUUId() };
+				var formSubmissionData = { some="data", tests=CreateUUID() };
 				var formConfiguration  = QueryNew( 'use_captcha', "boolean", [ [ true ] ] );
 				var formItems          = [ "just", "test", "data" ];
 				var validationResult   = CreateEmptyMock( "preside.system.services.validation.ValidationResult" );
-				var userAgent          = CreateUUId();
+				var userAgent          = CreateUUID();
 				var ipAddress          = "219.349.93.4";
-				var instanceId         = "TEST" & CreateUUId();
-				var userid             = CreateUUId();
+				var instanceId         = "TEST" & CreateUUID();
+				var instanceSite       = CreateUUID();
+				var instanceUrl        = "/helloworld.html";
+				var userid             = CreateUUID();
 
 				service.$( "renderResponsesForSaving", formSubmissionData );
 				service.$( "isV2Form", false );
@@ -900,11 +907,13 @@ component extends="testbox.system.BaseSpec"{
 				mockActionsService.$( "triggerSubmissionActions" );
 
 				expect( service.saveFormSubmission(
-					  formId      = formId
-					, requestData = requestData
-					, instanceId  = instanceId
-					, ipAddress   = ipAddress
-					, userAgent   = userAgent
+					  formId       = formId
+					, requestData  = requestData
+					, instanceId   = instanceId
+					, instanceSite = instanceSite
+					, instanceUrl  = instanceUrl
+					, ipAddress    = ipAddress
+					, userAgent    = userAgent
 				) ).toBe( validationResult );
 
 				expect( mockFormSubmissionDao.$callLog().insertData.len() ).toBe( 1 );
@@ -912,6 +921,8 @@ component extends="testbox.system.BaseSpec"{
 					  form           = formId
 					, submitted_by   = userId
 					, form_instance  = instanceId
+					, form_site      = instanceSite
+					, form_url       = instanceUrl
 					, ip_address     = ipAddress
 					, user_agent     = userAgent
 					, submitted_data = SerializeJson( formSubmissionData )

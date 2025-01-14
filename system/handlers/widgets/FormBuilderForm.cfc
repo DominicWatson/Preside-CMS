@@ -1,3 +1,6 @@
+/**
+ * @feature formBuilder
+ */
 component {
 	property name="formbuilderService" inject="formbuilderService";
 
@@ -60,6 +63,9 @@ component {
 				var resubmitMessage = formbuilderService.formHasFileUploadFields( formId ) ? "resubmit.after.login.with.files" : "resubmit.after.login";
 				rendered &= '<div class="alert alert-info"><p>' & translateResource( "formbuilder:#resubmitMessage#") & '</p></div>';
 			}
+
+			args.instanceSite = args.instanceSite ?: event.getSiteId();
+			args.instanceUrl  = args.instanceUrl  ?: event.getCurrentUrl();
 
 			rendered &= formbuilderService.renderForm(
 				  formId           = formId

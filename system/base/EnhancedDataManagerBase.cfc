@@ -95,6 +95,10 @@ component extends="preside.system.base.AdminHandler" {
 		var currentTab  = rc.tab ?: "";
 		var firstTab    = variables.tabs[ 1 ] ?: "";
 
+		if ( IsStruct( firstTab ) ) {
+			firstTab = firstTab.id;
+		}
+
 		event.addAdminBreadCrumb(
 			  title = translateResource( uri="cms:datamanager.viewrecord.breadcrumb.title", data=[ recordLabel ] )
 			, link  = event.buildAdminLink( objectName=objectName, recordId=recordId )
@@ -204,7 +208,7 @@ component extends="preside.system.base.AdminHandler" {
 			menuItem = _buildSidebarMenuItem( argumentCollection=arguments, tabId=tabId );
 			if ( StructCount( menuItem ) ) {
 				if ( firstTab == "" ) {
-					firstTab = tabId;
+					firstTab = IsStruct( tabId ) ? tabId.id : tabId;
 				}
 				if ( args.currentTab == "" && arrayIsEmpty( sidebarMenuItems ) ) {
 					menuItem.active = true;
@@ -372,6 +376,10 @@ component extends="preside.system.base.AdminHandler" {
 		var objectName = args.objectName ?: "";
 
 		return "<p><em class=""light-grey""><i class=""fa fa-fw fa-exclamation-triangle""></i> TODO: implement your own <code>admin.datamanager.#objectName#._defaultTab</code> viewlet for your entity.</em></p>";
+	}
+
+	private string function _auditTrailTab( event, rc, prc, args={} ) {
+		return renderViewlet( event="admin.audittrail.recordTrailViewlet", args={ recordId=args.recordId ?: "" } );
 	}
 
 	private string function _getNonVersionDateCreated( required string objectName, required string recordId ) {
